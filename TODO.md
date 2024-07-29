@@ -12,8 +12,9 @@ board obj
 
 main
     UI: welcome screen(pzliu)
-    loop: place ships
-    loop: take turns
+    loop: place ships (Robin)
+        - call the board.addShip
+    loop: take turns (Robin)
     end: all ships sunk
     
 class solver
