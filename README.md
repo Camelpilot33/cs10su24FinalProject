@@ -1,19 +1,24 @@
 # Project Titles
 
-# Names & ids
+## Names & ids
 
-# intro
+## intro
 
-# approval
+## approval
 
-# instructions
+## instructions
 
-# features
+## features
 
-# justification for complexity
+## justification for complexity
 
-# lists and script variables
+## lists and script variables
 
-# function table
+## function table
 
-# Bug writeup (if any bugs left)
+## Bug writeup (if any bugs left)
+
+## Dependencies
+
+1. `keyboard` library
+2. `time` library
