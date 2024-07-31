@@ -13,7 +13,6 @@ if not isWindows:  # Mac needs clear instead of cls to clear the console
         Clears the console screen.
         """
         os.system("clear")
-
 else:
 
     def clearConsole():
@@ -24,7 +23,17 @@ else:
 
 
 # Global Variables
-gameMode = 0  # 0: instructions, 1: Setup_2P, 2: Game_AI, 3: Setup_AI, 4: Game_AI
+"""
+actual modes:
+0: instruction
+1: Setup 2p
+2: Game 2p
+3: Setup AI
+4: Game AI
+config:
+10: select game mode
+"""
+gameMode = 0
 instructions = [
     [
         "1. The game board is a 10 * 10 grid.",
@@ -85,9 +94,10 @@ def handle_gm0(key):
     if key == keyboard.Key.right or key == keyboard.Key.space:
         instructions[1] += 1
         if instructions[1] >= len(instructions[0]):  # go to next game mode
-            print("\r\nStarting the game...  (press any key to continue)\n")
+            # print("\r\nStarting the game...  (press any key to continue)\n")
             print("\r\nPress 1 if you want to play against another player, 2 if you want to play against an AI")
-            return False
+            gameMode = 10
+            return True
         printInstr()
     # Go back
     elif key == keyboard.Key.left:
@@ -98,15 +108,15 @@ def handle_gm0(key):
     # None of the tested keys were pressed
     return True
 
-
 def select_game_mode(key):
     global gameMode
     if key.char == '1':
         gameMode = 1
+        print(f"Selected 2-player mode")
     elif key.char == '2':
         gameMode = 3
-    print(f"Game mode selected: {gameMode}")
-    return False  # Stop listener after game mode selection
+        print(f"Selected AI mode")
+    return True
 
 def handle_gm1_2p(key):
     """
@@ -291,10 +301,12 @@ def on_press(key):
     try:
         if gameMode == 0:  # Instructions
             return handle_gm0(key)
-        elif gameMode == 1:  # Setup
+        elif gameMode == 1:  # Setup 2p
             return handle_gm1_2p(key)
         elif gameMode == 3:  # Setup for AI game mode
             return handle_gm3_AI(key)
+        elif gameMode == 10:  # Select game mode
+            return select_game_mode(key)
         else:
             print("\rGame mode " + str(gameMode) + " not impl yet. press q to quit")
     except AttributeError:  # Bad key pressed
@@ -307,7 +319,7 @@ def welcome():
     Returns:
         str: The string 'quit' if the user presses 'Q' to quit the game.
     """
-
+    clearConsole()
     ascii_art = (
         r"""
      ____        _   _   _         _____ _     _       
@@ -330,14 +342,7 @@ def welcome():
 
 def main():
     welcome()
-    with keyboard.Listener(on_press=handle_gm0) as listener:
-        listener.join()
-
-    # After exiting the first listener, start another listener for game mode selection
-    with keyboard.Listener(on_press=select_game_mode) as listener:
-        listener.join()
-
-    with keyboard.Listener(on_press=on_press) as listener:
+    with keyboard.Listener(on_press=on_press, suppress=True) as listener:
         listener.join()
 
 
