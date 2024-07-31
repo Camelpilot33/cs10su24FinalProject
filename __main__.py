@@ -3,6 +3,7 @@ import os
 import sys
 import classes
 import solver
+import colors
 
 isWindows = sys.platform.startswith("win")
 if not isWindows:  # Mac needs clear instead of cls to clear the console
@@ -55,7 +56,7 @@ def printInstr():
     length = len(string)
     # Clear the line, print the string, and fill the rest with spaces (overwrite previous string)
     print(
-        f"\r{string}{' '*(max([len(i) for i in instructions[0]])-length)}",
+        f"\r{colors.color.BOLD}{colors.color.OKBLUE}{string}{colors.color.ENDC}{' '*(max([len(i) for i in instructions[0]])-length)}",
         end="",
         flush=True,
     )
@@ -134,7 +135,7 @@ def handle_gm1_2p(key):
     if gm1TurnPart == 0:
         clearConsole()
         print(
-            f"\rPlayer {turn+1}: ({shipsLeft} ships left)... (Only continue if it is your turn)\n"
+            f"\rPlayer {turn+1}: ({shipsLeft} ships left)... {colors.color.BOLD}{colors.color.WARNING}(Only continue if it is your turn){colors.color.ENDC}\n"
         )
         gm1TurnPart = 1
         return True
@@ -183,9 +184,9 @@ def handle_gm1_2p(key):
                 cursor = [0, 0]
                 return True
             else:
-                print("\r!! Invalid ship placement. Try again.\n")
+                print(f"\r{colors.color.FAIL}!! Invalid ship placement. Try again.{colors.color.ENDC}\n")
         print(
-            f"\rYou have to place the {nextShip} ship (length {nextShipLength}).\nUse Arrow keys to move the cursor, h/v to place the ship.\nIt will place the ship at your cursor, oriented down or right\n"
+            f"\rYou have to place the {nextShip} ship (length {colors.color.BOLD}{colors.color.WARNING}{nextShipLength}{colors.color.ENDC}).\nUse {colors.color.BOLD}{colors.color.WARNING}Arrow Keys{colors.color.ENDC} to move the cursor, {colors.color.BOLD}{colors.color.WARNING}'h' / 'v'{colors.color.ENDC} to place the ship.\nIt will place the ship at your cursor, oriented down or right\n"
         )
         print(players[turn].stringify(cursor))
         # gm1TurnPart = 0
