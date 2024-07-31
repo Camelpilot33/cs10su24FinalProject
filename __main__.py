@@ -2,6 +2,7 @@ from pynput import keyboard
 import os
 import sys
 import classes
+import solver
 
 isWindows = sys.platform.startswith("win")
 if not isWindows:  # Mac needs clear instead of cls to clear the console
@@ -22,7 +23,7 @@ else:
 
 
 # Global Variables
-gameMode = 0  # 0: instructions, 1: Setup, 2: Game
+gameMode = 0  # 0: instructions, 1: Setup_2P, 2: Game_AI, 3: Setup_AI, 4: Game_AI
 instructions = [
     [
         "1. The game board is a 10 * 10 grid.",
@@ -39,6 +40,7 @@ instructions = [
 players = [classes.Board(), classes.Board()]
 turn = 0
 gm1TurnPart = 0  # whether sensitive data is shown
+gm2TurnPart = 0
 cursor = [0, 0]  # r,c
 
 
@@ -59,7 +61,6 @@ def printInstr():
     )
     # Update the length of the current instruction string
     instructions[2] = len(instructions[0][instructions[1]])
-
 
 def handle_gm0(key):
     """
@@ -84,8 +85,8 @@ def handle_gm0(key):
         instructions[1] += 1
         if instructions[1] >= len(instructions[0]):  # go to next game mode
             print("\r\nStarting the game...  (press any key to continue)\n")
-            gameMode = 1
-            return True
+            print("\r\nPress 1 if you want to play against another player, 2 if you want to play against an AI")
+            return False
         printInstr()
     # Go back
     elif key == keyboard.Key.left:
@@ -96,6 +97,15 @@ def handle_gm0(key):
     # None of the tested keys were pressed
     return True
 
+
+def select_game_mode(key):
+    global gameMode
+    if key.char == '1':
+        gameMode = 1
+    elif key.char == '2':
+        gameMode = 3
+    print(f"Game mode selected: {gameMode}")
+    return False  # Stop listener after game mode selection
 
 def handle_gm1_2p(key):
     """
@@ -184,6 +194,83 @@ def handle_gm1_2p(key):
     # None of the tested keys were pressed
     return True
 
+def handle_gm3_AI(key):
+    """
+    Handles the game logic for players in game mode 2 (placement).
+
+    Args:
+        key: The key pressed by the player.
+
+    Returns:
+        bool: True if the game logic is successfully handled, False otherwise (exits).
+    """
+    global gameMode
+    global gm2TurnPart
+    global cursor
+    global turn
+    # Cycle forward
+    turn = 1
+    shipsLeft = 5 - len(players[turn].ships)
+    gm2TurnPart = 1
+    if shipsLeft == 0:
+        clearConsole()
+        print("\rAll ships placed!\nPress any key to start the game.")
+        gameMode = 4
+        return True
+
+    if gm2TurnPart == 1:
+        clearConsole()
+        nextShip = list(classes.Board.types.keys())[shipsLeft - 1]
+        nextShipLength = classes.Board.types[nextShip]
+        # Movement
+        if (
+            key == keyboard.Key.up
+            or key == keyboard.Key.down
+            or key == keyboard.Key.left
+            or key == keyboard.Key.right
+        ):
+            if key == keyboard.Key.up:
+                cursor[0] = (cursor[0] - 1) % 10
+            elif key == keyboard.Key.down:
+                cursor[0] = (cursor[0] + 1) % 10
+            elif key == keyboard.Key.left:
+                cursor[1] = (cursor[1] - 1) % 10
+            elif key == keyboard.Key.right:
+                cursor[1] = (cursor[1] + 1) % 10
+        # Orientation
+        elif key == keyboard.KeyCode.from_char(
+            "h"
+        ) or key == keyboard.KeyCode.from_char("v"):
+            # Place the ship
+            ship = classes.Ship([(0, 0) for i in range(nextShipLength)], nextShip)
+            if key == keyboard.KeyCode.from_char("h"):
+                for i in range(nextShipLength):
+                    ship.squares[i] = (cursor[0], cursor[1] + i)
+            else:
+                for i in range(nextShipLength):
+                    ship.squares[i] = (cursor[0] + i, cursor[1])
+
+            # Check if the ship can be placed
+            if players[turn].placeShip(ship):
+
+                # Place the ship
+                # players[turn].placeShip(cursor, nextShip, orientation)
+                print("Ship placed!")
+                # Update the game state
+                # reset cursor
+                cursor = [0, 0]
+                return True
+            else:
+                print("\r!! Invalid ship placement. Try again.\n")
+        print(
+            f"\rYou have to place the {nextShip} ship (length {nextShipLength}).\nUse Arrow keys to move the cursor, h/v to place the ship.\nIt will place the ship at your cursor, oriented down or right\n"
+        )
+        print(players[turn].stringify(cursor))
+        # gm1TurnPart = 0
+        # turn = (turn + 1) % 2
+        # return True
+    # None of the tested keys were pressed
+    return True
 
 def on_press(key):
     """
@@ -205,6 +292,8 @@ def on_press(key):
             return handle_gm0(key)
         elif gameMode == 1:  # Setup
             return handle_gm1_2p(key)
+        elif gameMode == 3:  # Setup for AI game mode
+            return handle_gm3_AI(key)
         else:
             print("\rGame mode " + str(gameMode) + " not impl yet. press q to quit")
     except AttributeError:  # Bad key pressed
@@ -240,7 +329,14 @@ def welcome():
 
 def main():
     welcome()
-    with keyboard.Listener(on_press=on_press, suppress=True) as listener:
+    with keyboard.Listener(on_press=handle_gm0) as listener:
+        listener.join()
+
+    # After exiting the first listener, start another listener for game mode selection
+    with keyboard.Listener(on_press=select_game_mode) as listener:
+        listener.join()
+
+    with keyboard.Listener(on_press=on_press) as listener:
         listener.join()
 
 
