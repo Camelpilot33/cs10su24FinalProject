@@ -1,11 +1,24 @@
 import random
+import colors
+
 
 # class for each players' board
 class Board:
     # The board will be printed with these labels:
     # 0: empty, 1: miss, 2: hit, 3: ship
-    labels = {0: ".", 1: "O", 2: "X", 3: "#"}
-    types = {"Destroyer": 2, "Submarine": 3, "Cruiser": 3, "Battleship": 4, "Carrier": 5}
+    labels = {
+        0: colors.color.OKBLUE + "." + colors.color.ENDC,
+        1: colors.color.BOLD + "O" + colors.color.ENDC,
+        2: colors.color.FAIL + "X" + colors.color.ENDC,
+        3: colors.color.WARNING + "#" + colors.color.ENDC,
+    }
+    types = {
+        "Destroyer": 2,
+        "Submarine": 3,
+        "Cruiser": 3,
+        "Battleship": 4,
+        "Carrier": 5,
+    }
 
     def __init__(self):
         """
@@ -37,7 +50,7 @@ class Board:
         else:
             self.grid[square[0]][square[1]] = 1
             return False
-    
+
     def gameOver(self):
         """
         Checks if the game is over.
@@ -49,7 +62,7 @@ class Board:
             if not ship.isSunk(self):
                 return False
         return True
-    
+
     def placeShip(self, ship):
         """
         Places a ship on the board.
@@ -66,7 +79,7 @@ class Board:
             for otherShip in self.ships:
                 for otherSquare in otherShip.squares:
                     if s == otherSquare:
-                        return False 
+                        return False
         self.ships.append(ship)
         return True
 
@@ -100,7 +113,6 @@ class Board:
         elif triesLeft == 0:
             return False
         return True
-        
 
     # Print the board
     def stringify(self, selected=None):
@@ -114,30 +126,45 @@ class Board:
             str: A string representation of the board.
         """
         # Copy the grid
-        printBoard = [[i for i in row] for row in self.grid]
+        numBoard = [[i for i in row] for row in self.grid]
         # Mark the ships
         for ship in self.ships:
             for s in ship.squares:
-                if printBoard[s[0]][s[1]] != 2:
-                    printBoard[s[0]][s[1]] = 3
+                if numBoard[s[0]][s[1]] != 2:
+                    numBoard[s[0]][s[1]] = 3
 
         # add coordinates
-        printBoard = "  1 2 3 4 5 6 7 8 9 10\n" + "\n".join(
-            [
-                f"{chr(i+65)} " + " ".join([Board.labels[cell] for cell in row]) + ' '
-                for (i, row) in enumerate(printBoard)
-            ]
-        )
         if selected is not None:
             r, c = selected
-            r = r+1
-            c = c*2+2
-            # set the char at (r, c-1) to [
-            printBoard = printBoard[:r*23+c-1] + "[" + printBoard[r*23+c:]
-            # set the char at (r, c+1) to ]
-            printBoard = printBoard[:r*23+c+1] + "]" + printBoard[r*23+c+2:]
+            printBoard = (
+                "  1 2 3 4 5 6 7 8 9 10\n"
+                + colors.color.ENDC
+            )
+            for i, row in enumerate(numBoard):
+                printBoard += f"{chr(i+65)} "
+                for j, cell in enumerate(row):
+                    if (i, j) == (r, c):
+                        printBoard += f"\b{colors.color.BOLD+colors.color.HL}[{Board.labels[cell]}{colors.color.BOLD+colors.color.HL}]{colors.color.ENDC}"
+                    else:
+                        printBoard += f"{Board.labels[cell]}"
+                        # if j+1 != c or r != i:
+                        printBoard += " "
+                printBoard += "\n"
+        else:
+            printBoard = (
+                "  1 2 3 4 5 6 7 8 9 10\n"
+                + "\n".join(
+                    [
+                        f"{chr(i+65)} "
+                        + " ".join([Board.labels[cell] for cell in row])
+                        + " "
+                        for (i, row) in enumerate(numBoard)
+                    ]
+                )
+            )
 
         return printBoard
+
     def __str__(self):
         return self.stringify(None)
 
@@ -172,7 +199,6 @@ class Ship:
                 return False
         return True
 
-    
     def isHit(self, square):
         """
         Checks if a given square is hit.
@@ -189,13 +215,16 @@ class Ship:
 # # Tests
 # board = Board()
 # ship = Ship([(1, 1), (1, 2), (1, 3)], "Destroyer")
-# ship1 = Ship([(4, 2), (4, 3), (4, 4), (4, 9)], "Battleship")
-# print(board.placeShip(ship))
-# print(board.placeShip(ship1))
-# print(board.placeShipRandom("Carrier"))
-# print(board.gameOver())
+# ship1 = Ship([(4, 2), (4, 3), (4, 4), (4, 5)], "Battleship")
+# (board.placeShip(ship))
+# (board.placeShip(ship1))
+# (board.placeShipRandom("Carrier"))
+# (board.gameOver())
 # board.hit((1, 1))
 # board.hit((1, 2))
-# board.hit((1, 3))
-# print(board.gameOver())
+# board.hit((2, 6))
+# (board.gameOver())
 # print(board)
+# # print(">"+board.stringify()[0:47]+"<")
+# print(len(board.stringify().split("\n")[2]) + 1)
+# print(board.stringify((5, 5)))
