@@ -1,18 +1,22 @@
 from pynput import keyboard
-import termios
-import tty
+import os
 import sys
+isWindows = sys.platform.startswith('win')
+if not isWindows: # make the console work with macos
+    import termios
+    import tty
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
 
-fd = sys.stdin.fileno()
-old_settings = termios.tcgetattr(fd)
+import classes
 
 # Glabal Variables
 gameMode = 0  # 0: instructions, 1: Setup, 2: Game
 instructions = [
     [
-        "1. The game board is a 10 * 10 grid where each cell represents a part of the ocean.",
-        "2. You have to first choose where you want to place your ship.",
-        "3. You need to guess where the enemy ships are hidden and sink them.",
+        "1. The game board is a 10 * 10 grid.",
+        "2. You first choose where to place the ship.",
+        "3. You then need to guess where enemy ships are.",
         "4. Enter coordinates to fire at that location.",
         "5. The game will tell you if you hit or missed a ship.",
         "6. Sink all enemy ships to win the game.",
@@ -21,9 +25,18 @@ instructions = [
     0,
     0,
 ]
+players = [classes.Board(), classes.Board()]
+turn = 0
+gm1TurnPart = 0 # 0: waiting for input, 1: ship placement (udlr/wasd), press (u/l for rotation)
+cursor = [0,0] #r,c
 
 
-def print_instr():
+def clearConsole():
+    """
+    Clears the console screen.
+    """
+    os.system('cls')
+def printInstr():
     """
     Prints the instruction string at the current index in the instructions list.
     Adjusts the spacing based on the desired length of the string.
@@ -40,7 +53,6 @@ def print_instr():
     )
     # Update the length of the current instruction string
     instructions[2] = len(instructions[0][instructions[1]])
-
 
 def handle_gm0(key):
     """
@@ -63,20 +75,92 @@ def handle_gm0(key):
     # Cycle forward
     if key == keyboard.Key.right or key == keyboard.Key.space:
         instructions[1] += 1
-        if instructions[1] >= len(instructions[0]):
-            print("\r\nStarting the game...")
+        if instructions[1] >= len(instructions[0]): # go to next game mode
+            print("\r\nStarting the game...  (press any key to continue)\n")
             gameMode = 1
             return True
-        print_instr()
+        printInstr()
     # Go back
     elif key == keyboard.Key.left:
         if instructions[1] == 0:
             return True
         instructions[1] = (instructions[1] - 1) % len(instructions[0])
-        print_instr()
+        printInstr()
     # None of the tested keys were pressed
     return True
 
+def handle_gm1_2p(key):
+    """
+    Handles the game logic for players in game mode 1 (placement).
+
+    Args:
+        key: The key pressed by the player.
+
+    Returns:
+        bool: True if the game logic is successfully handled, False otherwise (exits).
+    """
+    
+    global gameMode
+    global turn
+    global gm1TurnPart
+    # Cycle forward
+    shipsLeft = 5-len(players[turn].ships)
+
+    if shipsLeft == 0:
+        clearConsole()
+        print("\rAll ships placed!\nPress any key to start the game.")
+        gameMode = 2
+        return True
+
+    if gm1TurnPart == 0:
+        clearConsole()
+        print(f"\rPlayer {turn+1}: ({shipsLeft} ships left)... (Only continue if it is your turn)\n")
+        gm1TurnPart = 1
+        return True
+    if gm1TurnPart == 1:
+        clearConsole()
+        nextShip = list(classes.Board.types.keys())[shipsLeft-1]
+        nextShipLength = classes.Board.types[nextShip]
+        # Movement
+        if (key == keyboard.Key.up or key == keyboard.Key.down or key == keyboard.Key.left or key == keyboard.Key.right):
+            if key == keyboard.Key.up:
+                cursor[0] = (cursor[0] - 1) % 10
+            elif key == keyboard.Key.down:
+                cursor[0] = (cursor[0] + 1) % 10
+            elif key == keyboard.Key.left:
+                cursor[1] = (cursor[1] - 1) % 10
+            elif key == keyboard.Key.right:
+                cursor[1] = (cursor[1] + 1) % 10
+        # Orientation
+        elif key == keyboard.KeyCode.from_char('h') or key == keyboard.KeyCode.from_char('v'):
+            # Place the ship
+            ship = classes.Ship([(0, 0) for i in range(nextShipLength)], nextShip)
+            if key == keyboard.KeyCode.from_char('h'):
+                for i in range(nextShipLength):
+                    ship.squares[i] = (cursor[0], cursor[1] + i)
+            else:
+                for i in range(nextShipLength):
+                    ship.squares[i] = (cursor[0] + i, cursor[1])
+
+            # Check if the ship can be placed
+            if players[turn].placeShip(ship):
+
+                # Place the ship
+                # players[turn].placeShip(cursor, nextShip, orientation)
+                # Update the game state
+                gm1TurnPart = 0
+                turn = (turn + 1) % 2
+                print("\rShip placed!\nPlease pass the computer to the next player.\n")
+                return True
+            else:
+                print("\r!! Invalid ship placement. Try again.\n")
+        print(f"\rYou have to place the {nextShip} ship (length {nextShipLength}).\nUse Arrow keys to move the cursor, h/v to place the ship.\nIt will place the ship at your cursor, oriented down or right\n")
+        print(players[turn].stringify(cursor))
+        # gm1TurnPart = 0
+        # turn = (turn + 1) % 2
+        # return True
+    # None of the tested keys were pressed
+    return True
 
 def on_press(key):
     """
@@ -96,8 +180,10 @@ def on_press(key):
     try:
         if gameMode == 0:  # Instructions
             return handle_gm0(key)
+        elif gameMode == 1:  # Setup
+            return handle_gm1_2p(key)
         else:
-            print("\rGame mode: " + str(gameMode))
+            print("\rGame mode " + str(gameMode) + " not impl yet. press q to quit")
     except AttributeError:  # Bad key pressed
         pass
 
@@ -124,19 +210,22 @@ def welcome():
 
     print(ascii_art)
     print(
-        "Instructions: (Use right or left arrows to cycle through instructions, press Space for next, press Q to quit)\n"
+        "Right or Space to cycle through the options\nLeft to go back, q or Esc to quit\nThis window handles all your keys, so it might disable other windows\n"
     )
-    print_instr()
+    printInstr()
+
 
 
 def main():
     welcome()
     try:
-        tty.setraw(sys.stdin.fileno())
-        with keyboard.Listener(on_press=on_press) as listener:
+        if not isWindows:
+            tty.setraw(sys.stdin.fileno())
+        with keyboard.Listener(on_press=on_press, suppress=True) as listener:
             listener.join()
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        if not isWindows:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 
 if __name__ == "__main__":

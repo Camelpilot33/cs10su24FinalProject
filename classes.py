@@ -103,7 +103,7 @@ class Board:
         
 
     # Print the board
-    def __str__(self):
+    def stringify(self, selected=None):
         """
         Returns a string representation of the board.
 
@@ -124,12 +124,22 @@ class Board:
         # add coordinates
         printBoard = "  1 2 3 4 5 6 7 8 9 10\n" + "\n".join(
             [
-                f"{chr(i+65)} " + " ".join([Board.labels[cell] for cell in row])
+                f"{chr(i+65)} " + " ".join([Board.labels[cell] for cell in row]) + ' '
                 for (i, row) in enumerate(printBoard)
             ]
         )
+        if selected is not None:
+            r, c = selected
+            r = r+1
+            c = c*2+2
+            # set the char at (r, c-1) to [
+            printBoard = printBoard[:r*23+c-1] + "[" + printBoard[r*23+c:]
+            # set the char at (r, c+1) to ]
+            printBoard = printBoard[:r*23+c+1] + "]" + printBoard[r*23+c+2:]
 
         return printBoard
+    def __str__(self):
+        return self.stringify(None)
 
 
 # Ship class
@@ -179,7 +189,7 @@ class Ship:
 # # Tests
 # board = Board()
 # ship = Ship([(1, 1), (1, 2), (1, 3)], "Destroyer")
-# ship1 = Ship([(4, 2), (4, 3), (4, 4), (4, 5)], "Battleship")
+# ship1 = Ship([(4, 2), (4, 3), (4, 4), (4, 9)], "Battleship")
 # print(board.placeShip(ship))
 # print(board.placeShip(ship1))
 # print(board.placeShipRandom("Carrier"))
