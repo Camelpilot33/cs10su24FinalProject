@@ -1,16 +1,27 @@
 from pynput import keyboard
 import os
 import sys
-isWindows = sys.platform.startswith('win')
-if not isWindows: # make the console work with macos
-    import termios
-    import tty
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-
 import classes
 
-# Glabal Variables
+isWindows = sys.platform.startswith("win")
+if not isWindows:  # Mac needs clear instead of cls to clear the console
+
+    def clearConsole():
+        """
+        Clears the console screen.
+        """
+        os.system("clear")
+
+else:
+
+    def clearConsole():
+        """
+        Clears the console screen.
+        """
+        os.system("cls")
+
+
+# Global Variables
 gameMode = 0  # 0: instructions, 1: Setup, 2: Game
 instructions = [
     [
@@ -27,15 +38,10 @@ instructions = [
 ]
 players = [classes.Board(), classes.Board()]
 turn = 0
-gm1TurnPart = 0 # 0: waiting for input, 1: ship placement (udlr/wasd), press (u/l for rotation)
-cursor = [0,0] #r,c
+gm1TurnPart = 0  # whether sensitive data is shown
+cursor = [0, 0]  # r,c
 
 
-def clearConsole():
-    """
-    Clears the console screen.
-    """
-    os.system('cls')
 def printInstr():
     """
     Prints the instruction string at the current index in the instructions list.
@@ -53,6 +59,7 @@ def printInstr():
     )
     # Update the length of the current instruction string
     instructions[2] = len(instructions[0][instructions[1]])
+
 
 def handle_gm0(key):
     """
@@ -75,7 +82,7 @@ def handle_gm0(key):
     # Cycle forward
     if key == keyboard.Key.right or key == keyboard.Key.space:
         instructions[1] += 1
-        if instructions[1] >= len(instructions[0]): # go to next game mode
+        if instructions[1] >= len(instructions[0]):  # go to next game mode
             print("\r\nStarting the game...  (press any key to continue)\n")
             gameMode = 1
             return True
@@ -89,6 +96,7 @@ def handle_gm0(key):
     # None of the tested keys were pressed
     return True
 
+
 def handle_gm1_2p(key):
     """
     Handles the game logic for players in game mode 1 (placement).
@@ -99,12 +107,13 @@ def handle_gm1_2p(key):
     Returns:
         bool: True if the game logic is successfully handled, False otherwise (exits).
     """
-    
+
     global gameMode
     global turn
     global gm1TurnPart
+    global cursor
     # Cycle forward
-    shipsLeft = 5-len(players[turn].ships)
+    shipsLeft = 5 - len(players[turn].ships)
 
     if shipsLeft == 0:
         clearConsole()
@@ -114,15 +123,22 @@ def handle_gm1_2p(key):
 
     if gm1TurnPart == 0:
         clearConsole()
-        print(f"\rPlayer {turn+1}: ({shipsLeft} ships left)... (Only continue if it is your turn)\n")
+        print(
+            f"\rPlayer {turn+1}: ({shipsLeft} ships left)... (Only continue if it is your turn)\n"
+        )
         gm1TurnPart = 1
         return True
     if gm1TurnPart == 1:
         clearConsole()
-        nextShip = list(classes.Board.types.keys())[shipsLeft-1]
+        nextShip = list(classes.Board.types.keys())[shipsLeft - 1]
         nextShipLength = classes.Board.types[nextShip]
         # Movement
-        if (key == keyboard.Key.up or key == keyboard.Key.down or key == keyboard.Key.left or key == keyboard.Key.right):
+        if (
+            key == keyboard.Key.up
+            or key == keyboard.Key.down
+            or key == keyboard.Key.left
+            or key == keyboard.Key.right
+        ):
             if key == keyboard.Key.up:
                 cursor[0] = (cursor[0] - 1) % 10
             elif key == keyboard.Key.down:
@@ -132,10 +148,12 @@ def handle_gm1_2p(key):
             elif key == keyboard.Key.right:
                 cursor[1] = (cursor[1] + 1) % 10
         # Orientation
-        elif key == keyboard.KeyCode.from_char('h') or key == keyboard.KeyCode.from_char('v'):
+        elif key == keyboard.KeyCode.from_char(
+            "h"
+        ) or key == keyboard.KeyCode.from_char("v"):
             # Place the ship
             ship = classes.Ship([(0, 0) for i in range(nextShipLength)], nextShip)
-            if key == keyboard.KeyCode.from_char('h'):
+            if key == keyboard.KeyCode.from_char("h"):
                 for i in range(nextShipLength):
                     ship.squares[i] = (cursor[0], cursor[1] + i)
             else:
@@ -151,16 +169,21 @@ def handle_gm1_2p(key):
                 gm1TurnPart = 0
                 turn = (turn + 1) % 2
                 print("\rShip placed!\nPlease pass the computer to the next player.\n")
+                # reset cursor
+                cursor = [0, 0]
                 return True
             else:
                 print("\r!! Invalid ship placement. Try again.\n")
-        print(f"\rYou have to place the {nextShip} ship (length {nextShipLength}).\nUse Arrow keys to move the cursor, h/v to place the ship.\nIt will place the ship at your cursor, oriented down or right\n")
+        print(
+            f"\rYou have to place the {nextShip} ship (length {nextShipLength}).\nUse Arrow keys to move the cursor, h/v to place the ship.\nIt will place the ship at your cursor, oriented down or right\n"
+        )
         print(players[turn].stringify(cursor))
         # gm1TurnPart = 0
         # turn = (turn + 1) % 2
         # return True
     # None of the tested keys were pressed
     return True
+
 
 def on_press(key):
     """
@@ -215,17 +238,10 @@ def welcome():
     printInstr()
 
 
-
 def main():
     welcome()
-    try:
-        if not isWindows:
-            tty.setraw(sys.stdin.fileno())
-        with keyboard.Listener(on_press=on_press, suppress=True) as listener:
-            listener.join()
-    finally:
-        if not isWindows:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    with keyboard.Listener(on_press=on_press, suppress=True) as listener:
+        listener.join()
 
 
 if __name__ == "__main__":
