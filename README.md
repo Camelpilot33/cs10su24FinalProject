@@ -20,5 +20,8 @@
 
 ## Dependencies
 
-1. `keyboard` library
+
+to install libraries do `pip install -r requirements.txt`\
+to add library do `pipreqs . --force` (first you need `pip install pipreqs`)
+1. `pynput` library
 2. `time` library
