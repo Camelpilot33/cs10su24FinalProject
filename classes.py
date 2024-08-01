@@ -29,7 +29,7 @@ class Board:
         self.grid = [[0 for x in range(10)] for y in range(10)]
         self.ships = []
 
-    def hit(self, square):
+    def hit(self: 'Board', square: tuple[int, int]) -> bool:
         """
         Checks if the guess was a hit and updates the board accordingly.
 
@@ -115,7 +115,7 @@ class Board:
         return True
 
     # Print the board
-    def stringify(self, selected=None):
+    def stringify(self, selected=None, drawShips=True):
         """
         Returns a string representation of the board.
 
@@ -128,10 +128,11 @@ class Board:
         # Copy the grid
         numBoard = [[i for i in row] for row in self.grid]
         # Mark the ships
-        for ship in self.ships:
-            for s in ship.squares:
-                if numBoard[s[0]][s[1]] != 2:
-                    numBoard[s[0]][s[1]] = 3
+        if drawShips:
+            for ship in self.ships:
+                for s in ship.squares:
+                    if numBoard[s[0]][s[1]] != 2:
+                        numBoard[s[0]][s[1]] = 3
 
         # add coordinates
         if selected is not None:
@@ -213,18 +214,18 @@ class Ship:
 
 
 # # Tests
-# board = Board()
-# ship = Ship([(1, 1), (1, 2), (1, 3)], "Destroyer")
+board = Board()
+ship = Ship([(1, 1), (1, 2), (1, 3)], "Destroyer")
 # ship1 = Ship([(4, 2), (4, 3), (4, 4), (4, 5)], "Battleship")
-# (board.placeShip(ship))
+(board.placeShip(ship))
 # (board.placeShip(ship1))
 # (board.placeShipRandom("Carrier"))
 # (board.gameOver())
-# board.hit((1, 1))
-# board.hit((1, 2))
-# board.hit((2, 6))
+board.hit((1, 1))
+board.hit((1, 2))
+board.hit((2, 6))
 # (board.gameOver())
-# print(board)
+print(board.stringify((1, 1),False))
 # # print(">"+board.stringify()[0:47]+"<")
 # print(len(board.stringify().split("\n")[2]) + 1)
 # print(board.stringify((5, 5)))

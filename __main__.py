@@ -50,6 +50,7 @@ instructions = [
 players = [classes.Board(), classes.Board()]
 turn = 0
 gm1TurnPart = 0  # whether sensitive data is shown
+gm3TurnPart = 0
 gm2TurnPart = 0
 cursor = [0, 0]  # r,c
 
@@ -216,20 +217,20 @@ def handle_gm3_AI(key):
         bool: True if the game logic is successfully handled, False otherwise (exits).
     """
     global gameMode
-    global gm2TurnPart
+    global gm3TurnPart
     global cursor
     global turn
     # Cycle forward
     turn = 1
     shipsLeft = 5 - len(players[turn].ships)
-    gm2TurnPart = 1
+    gm3TurnPart = 1
     if shipsLeft == 0:
         clearConsole()
         print("\rAll ships placed!\nPress any key to start the game.")
         gameMode = 4
         return True
 
-    if gm2TurnPart == 1:
+    if gm3TurnPart == 1:
         clearConsole()
         nextShip = list(classes.Board.types.keys())[shipsLeft - 1]
         nextShipLength = classes.Board.types[nextShip]
@@ -249,9 +250,7 @@ def handle_gm3_AI(key):
             elif key == keyboard.Key.right:
                 cursor[1] = (cursor[1] + 1) % 10
         # Orientation
-        elif key == keyboard.KeyCode.from_char(
-            "h"
-        ) or key == keyboard.KeyCode.from_char("v"):
+        elif key == keyboard.KeyCode.from_char("h") or key == keyboard.KeyCode.from_char("v"):
             # Place the ship
             ship = classes.Ship([(0, 0) for i in range(nextShipLength)], nextShip)
             if key == keyboard.KeyCode.from_char("h"):
@@ -283,6 +282,48 @@ def handle_gm3_AI(key):
     # None of the tested keys were pressed
     return True
 
+def handle_gm2_2p(key):
+    global gameMode
+    global cursor
+    global turn
+    global gm2TurnPart
+    clearConsole()
+    if key == keyboard.Key.enter and gm2TurnPart == 1:
+        # Fire
+        if players[(turn + 1) % 2].grid[cursor[0]][cursor[1]] != 0:
+            print("\rBad input! Press any key to continue.")
+            return True
+        result = players[(turn + 1) % 2].hit(tuple(cursor))
+        if result == True:
+            print("\rHit!")
+        elif result == False:
+            print("\rMiss!")
+        elif result == 3:
+            print("\rYou already fired there!")
+        # Update the game state
+        turn = (turn + 1) % 2
+        gm2TurnPart = 0
+        return True
+    # Movement
+    if (
+        key == keyboard.Key.up
+        or key == keyboard.Key.down
+        or key == keyboard.Key.left
+        or key == keyboard.Key.right
+    ):
+        if key == keyboard.Key.up:
+            cursor[0] = (cursor[0] - 1) % 10
+        elif key == keyboard.Key.down:
+            cursor[0] = (cursor[0] + 1) % 10
+        elif key == keyboard.Key.left:
+            cursor[1] = (cursor[1] - 1) % 10
+        elif key == keyboard.Key.right:
+            cursor[1] = (cursor[1] + 1) % 10
+    print("\rUse Arrow keys to move the cursor, Enter to fire\n")
+
+    gm2TurnPart = 1
+    print(players[(turn+1)%2].stringify(cursor, False))
+
 def on_press(key):
     """
     Handles the key press event.
@@ -303,6 +344,8 @@ def on_press(key):
             return handle_gm0(key)
         elif gameMode == 1:  # Setup 2p
             return handle_gm1_2p(key)
+        elif gameMode == 2:  # Game 2p
+            return handle_gm2_2p(key)
         elif gameMode == 3:  # Setup for AI game mode
             return handle_gm3_AI(key)
         elif gameMode == 10:  # Select game mode
