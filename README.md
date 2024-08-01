@@ -8,6 +8,13 @@
 
 ## instructions
 
+To install packages: `pip install -r requirements.txt`\
+### MACOS:
+Make sure (settings>Privacy&Security>Allow Assistive applications to control the computer) has your terminal added to it.\
+Make sure (settings>Privacy&Security>Input monitoring) has your terminal added to it\
+These will allow the program to respond to key inputs and stop it from printing escape codes to the terminal.
+
+
 ## features
 
 ## justification for complexity
