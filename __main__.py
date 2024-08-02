@@ -297,7 +297,7 @@ def handle_gm3_AI(key):
                 cursor = [0, 0]
                 return True
             else:
-                print("\r!! Invalid ship placement. Try again.\n")
+                print(colors.color.FAIL+"\r!! Invalid ship placement. Try again.\n")
         print(
             f"\rYou have to place the {nextShip} ship (length {nextShipLength}).\nUse Arrow keys to move the cursor, h/v to place the ship.\nIt will place the ship at your cursor, oriented down or right\n"
         )
@@ -480,7 +480,7 @@ def on_press(key):
         else:
             print("\rGame mode " + str(gameMode) + " not impl yet. press q to quit")
     except AttributeError:  # Bad key pressed
-        pass
+        pass # do nothing
 
 
 def welcome():
@@ -490,16 +490,17 @@ def welcome():
         str: The string 'quit' if the user presses 'Q' to quit the game.
     """
     clearConsole()
+
     ascii_art = (
         r"""
-     ____        _   _   _         _____ _     _       
+     ____        _   _   _         _____ _     _        
     |  _ \      | | | | | |       / ____| |   (_)
     | |_) | __ _| |_| |_| | ___  | (___ | |__  _ _ __
     |  _ < / _` | __| __| |/ _ \  \___ \| '_ \| | '_ \ 
     | |_) | (_| | |_| |_| |  __/  ____) | | | | | |_) |
     |____/ \__,_|\__|\__|_|\___| |_____/|_| |_|_| .__/
                                                 | |
-    By Robin, Peizhuo, and Samuel               |_|"""
+         """+colors.color.OKGREEN+colors.color.BOLD+"By Robin, Peizhuo, and Samuel"+colors.color.ENDC+"          |_|"
         + "\n" * 2
     )
 
