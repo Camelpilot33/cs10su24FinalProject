@@ -292,6 +292,7 @@ def handle_gm2_2p(key):
         # Fire
         if players[(turn + 1) % 2].grid[cursor[0]][cursor[1]] != 0:
             print("\rBad input! Press any key to continue.")
+            gm2TurnPart = 0
             return True
         result = players[(turn + 1) % 2].hit(tuple(cursor))
         if result == True:
@@ -319,6 +320,7 @@ def handle_gm2_2p(key):
             cursor[1] = (cursor[1] - 1) % 10
         elif key == keyboard.Key.right:
             cursor[1] = (cursor[1] + 1) % 10
+    print(f"\rPlayer {turn+1}: {colors.color.BOLD}{colors.color.WARNING}Firing...{colors.color.ENDC}\n")
     print("\rUse Arrow keys to move the cursor, Enter to fire\n")
 
     gm2TurnPart = 1
