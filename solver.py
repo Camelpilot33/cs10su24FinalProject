@@ -11,7 +11,7 @@
 from classes import Board
 import random
 
-def solve_battleship(board):
+def solve_battleship(board, cycles=1000):
     possible_loc = {}
 
     # For each ship from 1 to x
@@ -20,8 +20,8 @@ def solve_battleship(board):
         ship_length = Board.types[ship_type]
         
         # For each square from 1 to 100
-        for x in range(10):
-            for y in range(10):
+        for x in range(11-ship_length):
+            for y in range(11-ship_length):
                 
                 # For each orientation from vertical to horizontal
                 for orientation in ["horizontal", "vertical"]:
@@ -69,7 +69,7 @@ def solve_battleship(board):
     location_freq = {ship_type: [0] * len(possible_loc[ship_type]) for ship_type in Board.types}
     valid_cnt = 0
 
-    for _ in range(1000):  # Loop A, y times
+    for _ in range(cycles):  # Loop A, y times
         selected_loc = {}
         valid = True
 
@@ -114,6 +114,6 @@ def solve_battleship(board):
     # Divide each element in square_freq by valid_cnt
     for x in range(10):
         for y in range(10):
-            square_freq[x][y] /= valid_cnt
+            square_freq[x][y] /= valid_cnt #XXX DIV0 ERROR HERE (some error in counting valid)
 
     return square_freq
