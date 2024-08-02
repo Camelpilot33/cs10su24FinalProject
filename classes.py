@@ -27,7 +27,7 @@ class Board:
         The __init__ method is called when a new object of the class is created. It initializes the grid attribute as a 10x10 matrix filled with zeros and the ships attribute as an empty list.
         """
         self.grid = [[0 for x in range(10)] for y in range(10)]
-        self.ships = []
+        self.ships: list[Ship] = []
 
     def hit(self: 'Board', square: tuple[int, int]) -> bool:
         """
@@ -213,19 +213,19 @@ class Ship:
         return square in self.squares
 
 
-# # Tests
-board = Board()
-ship = Ship([(1, 1), (1, 2), (1, 3)], "Destroyer")
-# ship1 = Ship([(4, 2), (4, 3), (4, 4), (4, 5)], "Battleship")
-(board.placeShip(ship))
-# (board.placeShip(ship1))
-# (board.placeShipRandom("Carrier"))
-# (board.gameOver())
-board.hit((1, 1))
-board.hit((1, 2))
-board.hit((2, 6))
-# (board.gameOver())
-print(board.stringify((1, 1),False))
-# # print(">"+board.stringify()[0:47]+"<")
-# print(len(board.stringify().split("\n")[2]) + 1)
-# print(board.stringify((5, 5)))
+# # # Tests
+# board = Board()
+# ship = Ship([(1, 1), (1, 2), (1, 3)], "Destroyer")
+# # ship1 = Ship([(4, 2), (4, 3), (4, 4), (4, 5)], "Battleship")
+# (board.placeShip(ship))
+# # (board.placeShip(ship1))
+# # (board.placeShipRandom("Carrier"))
+# # (board.gameOver())
+# board.hit((1, 1))
+# board.hit((1, 2))
+# board.hit((2, 6))
+# # (board.gameOver())
+# print(board.stringify((1, 1),False))
+# # # print(">"+board.stringify()[0:47]+"<")
+# # print(len(board.stringify().split("\n")[2]) + 1)
+# # print(board.stringify((5, 5)))

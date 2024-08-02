@@ -294,9 +294,12 @@ def handle_gm2_2p(key):
             print("\rBad input! Press any key to continue.")
             gm2TurnPart = 0
             return True
+        board = players[(turn + 1) % 2]
+        sunkShips = set([ship for ship in board.ships if ship.isSunk(board)])
         result = players[(turn + 1) % 2].hit(tuple(cursor))
         if result == True:
-            print("\rHit!")
+            sunkThisTurn = set([ship for ship in board.ships if ship.isSunk(board)]) - sunkShips
+            print(f"\rHit! {'You sunk the '+colors.color.WARNING+sunkThisTurn.pop().shipType+"!" if sunkThisTurn else ''}\n")
         elif result == False:
             print("\rMiss!")
         elif result == 3:
