@@ -93,9 +93,12 @@ def solve_battleship(board, cycles=1000):
             continue
 
         # If this configuration conflicts with the current board state
-        if any(board.grid[s[0]][s[1]] == 2 and s not in selected_location for s in selected_location for selected_location in selected_loc.values()):
+        for selected_location in selected_loc.values():
+            if any(board.grid[s[0]][s[1]] == 2 and s not in selected_location for s in selected_location):
+                valid = False
+                break
+        if not valid:
             continue
-
         # For each selected ship location
         for ship_type, selected_location in selected_loc.items():
             location_freq[ship_type][possible_loc[ship_type].index(selected_location)] += 1
@@ -109,11 +112,14 @@ def solve_battleship(board, cycles=1000):
         for index, pos in enumerate(possible_loc[ship_type]):
             # For each square covered by this ship location
             for s in pos:
-                square_freq[s[0]][s[1]] += location_freq[ship_type][index]
+                if board.grid[s[0]][s[1]] == 0: #don't guess hit locations  
+                    square_freq[s[0]][s[1]] += location_freq[ship_type][index]
     
     # Divide each element in square_freq by valid_cnt
     for x in range(10):
         for y in range(10):
-            square_freq[x][y] /= valid_cnt #XXX DIV0 ERROR HERE (some error in counting valid)
+            if valid_cnt == 0:
+                return square_freq
+            square_freq[x][y] /= valid_cnt 
 
     return square_freq
