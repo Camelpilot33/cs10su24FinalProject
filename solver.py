@@ -20,8 +20,8 @@ def solve_battleship(board, cycles=1000):
         ship_length = Board.types[ship_type]
         
         # For each square from 1 to 100
-        for x in range(11-ship_length):
-            for y in range(11-ship_length):
+        for x in range(10):
+            for y in range(10):
                 
                 # For each orientation from vertical to horizontal
                 for orientation in ["horizontal", "vertical"]:
