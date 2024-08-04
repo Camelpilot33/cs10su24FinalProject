@@ -465,7 +465,9 @@ def handle_gm4_AI(key):
                     max_freq = square_freq[i][j]
                     target = (i, j)
         result = player_board.hit(target)
-        print(f"\rThe AI fired at {target}")
+        row, col = target
+        rowLetter = chr(row + 65)
+        print(f"\rThe AI fired at {rowLetter}{col + 1}")
         board = player_board
         sunkShips = set([ship for ship in board.ships if ship.isSunk(board)])
         if result == True:
@@ -537,7 +539,7 @@ def welcome():
     | |_) | (_| | |_| |_| |  __/  ____) | | | | | |_) |
     |____/ \__,_|\__|\__|_|\___| |_____/|_| |_|_| .__/
                                                 | |
-         """+colors.color.OKGREEN+colors.color.BOLD+"By Robin, Peizhuo, and Samuel"+colors.color.ENDC+"          |_|"
+         """+colors.color.OKCYAN+colors.color.BOLD+"By Samuel, Peizhuo, and Robin"+colors.color.ENDC+"          |_|"
         + "\n" * 2
     )
 
