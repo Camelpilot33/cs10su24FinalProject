@@ -56,6 +56,35 @@ gm2TurnPart = 0
 gm4TurnPart = 0
 cursor = [0, 0]  # row, col
 
+def gameOver(ai=False) -> bool:
+    """
+    Checks if the game is over by checking if all ships on either board are sunk.
+
+    Args:
+        p1Board: The first player's board.
+        p2Board: The second player's board.
+
+    Returns:
+        bool: True if the game is over, False otherwise.
+    """
+    p1Board = players[0]
+    p2Board = players[1]
+    # check if player 1 lost
+    p1Lost = all([ship.isSunk(p1Board) for ship in p1Board.ships])
+    # check if player 2 lost
+    p2Lost=all([ship.isSunk(p2Board) for ship in p2Board.ships])
+    if p1Lost or p2Lost:
+        clearConsole()
+        print(f"\r{colors.color.BOLD+colors.color.OKGREEN}Game Over!, {'Player 1' if p1Lost else 'Player 2'} wins!{colors.color.ENDC}\n\n")
+        print("Player 1's Board:")
+        print(p1Board.stringify())
+        if ai:
+            print("\n\nAI's Board:")
+        else:
+            print("Player 2's Board:")
+        print(p2Board.stringify())
+    return p1Lost or p2Lost
+
 
 def printInstr():
     """
@@ -139,7 +168,7 @@ def handle_gm0(key):
     # None of the tested keys were pressed
     return True
 
-
+# setup modes
 def handle_gm1_2p(key):
     """
     Handles the game logic for players in game mode 1 (placement).
@@ -308,8 +337,12 @@ def handle_gm3_AI(key):
     # None of the tested keys were pressed
     return True
 
-
+# game modes
 def handle_gm2_2p(key):
+
+    if gameOver():
+        return False
+
     global gameMode
     global cursor
     global turn
@@ -371,6 +404,10 @@ def handle_gm4_AI(key):
     Returns:
         True if the game state is updated successfully, False otherwise.
     """
+
+    if gameOver(True):
+        return False
+
     global gameMode
     global cursor
     global turn
