@@ -134,7 +134,7 @@ class Board:
                     if numBoard[s[0]][s[1]] != 2:
                         numBoard[s[0]][s[1]] = 3
 
-        # add coordinates
+        # draw the board
         if selected is not None:
             r,c = selected
             printBoard: str = "  1 2 3 4 5 6 7 8 9 10\n" + clr.ENDC
@@ -142,6 +142,7 @@ class Board:
                 printBoard += f"{chr(i+65)} "
                 for j, cell in enumerate(row):
                     if (i, j) == (r, c):
+                        # if selected
                         printBoard += f"\b{clr.BOLD+clr.HL}[{Board.labels[cell]}{clr.BOLD+clr.HL}]{clr.ENDC}"
                     else:
                         printBoard += f"{Board.labels[cell]}"
@@ -149,6 +150,7 @@ class Board:
                         printBoard += " "
                 printBoard += "\n"
         else:
+            # don't care about selected
             printBoard = "  1 2 3 4 5 6 7 8 9 10\n" + "\n".join(
                 [
                     f"{chr(i+65)} "

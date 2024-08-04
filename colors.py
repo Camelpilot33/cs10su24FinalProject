@@ -1,3 +1,5 @@
+# Description: This file contains the color codes for the terminal output.
+
 class color:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -9,7 +11,3 @@ class color:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
     HL = '\033[38;5;10m'
-
-
-# \033[91me\033[0m #this will print e in red color
-# \033[92m[\033[0m #this fails to print [ in green color

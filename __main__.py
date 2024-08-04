@@ -1,60 +1,67 @@
-from pynput import keyboard
-import os
-import sys
-import classes
-import solver
-import colors
+from pynput import keyboard # needed for key input handling
+import os # needed for clearing the console
+import sys # needed for checking the operating system
+# our own modules
+import classes # needed for the Board and Ship classes
+import solver # needed for the AI solver
+from colors import color as clr # needed for colored text
 
-isWindows = sys.platform.startswith("win")
-if not isWindows:  # Mac needs clear instead of cls to clear the console
+def clearConsole() -> None:
+    """
+    Clears the console screen.
 
-    def clearConsole():
-        """
-        Clears the console screen.
-        """
+    This function checks the operating system and uses the appropriate command to clear the console screen.
+    On Windows, it uses the 'cls' command, while on Mac and Linux, it uses the 'clear' command.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+    isWindows = sys.platform.startswith("win")
+    if not isWindows:  # Mac, Linux needs 'clear' instead of 'cls' to clear the console
         os.system("clear")
-
-else:
-
-    def clearConsole():
-        """
-        Clears the console screen.
-        """
+    else:
         os.system("cls")
 
 
 # Global Variables
-"""
-actual modes:
-0: instruction
-1: Setup 2p
-2: Game 2p
-3: Setup AI
-4: Game AI
-config:
-10: select game mode
-"""
+# gameMode:
+# 0: instructions
+# 1: Setup 2p
+# 2: Play 2p
+# 3: Setup AI
+# 4: Play AI
+# 10: select game mode
 gameMode = 0
 instructions = [
     [
         "1. The game board is a 10 * 10 grid.",
-        "2. You first choose where to place the ship.",
-        "3. You then need to guess where enemy ships are.",
-        "4. Enter coordinates to fire at that location.",
-        "5. The game will tell you if you hit or missed a ship.",
-        "6. Sink all enemy ships to win the game.",
+        "2. First you need to set up the board by placing your ships.",
+        "3. You can place your ships horizontally or vertically.",
+        "4. Control the cursor with arrow keys",
+        "5. After placing all your ships, you can start the game.",
+        "6. In the game, you can fire at the enemy board by pressing Enter.",
+        "7. Sink all enemy ships to win the game.",
         "Good luck, Captain!",
     ],
     0,
     0,
 ]
+# players: list of 2 boards
 players = [classes.Board(), classes.Board()]
+# turn: 0 for player 1, 1 for player 2
 turn = 0
-gm1TurnPart = 0  # whether sensitive data is shown
+# these are all the parts of the turn
+# they need to be global so that they remain between function calls
+gm1TurnPart = 0
 gm3TurnPart = 0
 gm2TurnPart = 0
 gm4TurnPart = 0
-cursor = [0, 0]  # row, col
+# cursor: [row, col]
+cursor = [0, 0]
+
 
 def gameOver(ai=False) -> bool:
     """
@@ -72,10 +79,12 @@ def gameOver(ai=False) -> bool:
     # check if player 1 lost
     p1Lost = all([ship.isSunk(p1Board) for ship in p1Board.ships])
     # check if player 2 lost
-    p2Lost=all([ship.isSunk(p2Board) for ship in p2Board.ships])
+    p2Lost = all([ship.isSunk(p2Board) for ship in p2Board.ships])
     if p1Lost or p2Lost:
         clearConsole()
-        print(f"\r{colors.color.BOLD+colors.color.OKGREEN}Game Over!, {'Player 1' if p1Lost else 'Player 2'} wins!{colors.color.ENDC}\n\n")
+        print(
+            f"\r{clr.BOLD+clr.OKGREEN}Game Over!, {'Player 2' if p1Lost else 'Player 1'} wins!{clr.ENDC}\n\n"
+        )
         print("Player 1's Board:")
         print(p1Board.stringify())
         if ai:
@@ -97,7 +106,7 @@ def printInstr():
     length = len(string)
     # Clear the line, print the string, and fill the rest with spaces (overwrite previous string)
     print(
-        f"\r{colors.color.BOLD}{colors.color.OKBLUE}{string}{colors.color.ENDC}{' '*(max([len(i) for i in instructions[0]])-length)}",
+        f"\r{clr.BOLD}{clr.OKBLUE}{string}{clr.ENDC}{' '*(max([len(i) for i in instructions[0]])-length)}",
         end="",
         flush=True,
     )
@@ -106,6 +115,15 @@ def printInstr():
 
 
 def select_game_mode(key):
+    """
+    Selects the game mode based on the key pressed.
+
+    Parameters:
+    key (Key): The key object representing the key that was pressed.
+
+    Returns:
+    bool: True if the game mode was successfully selected, False otherwise.
+    """
     global gameMode
     if key.char == "1":
         gameMode = 1
@@ -118,6 +136,12 @@ def select_game_mode(key):
 
 
 def setupAI():
+    """
+    Sets up the AI board by placing ships randomly on the board.
+
+    Returns:
+    bool: True if the AI board was successfully set up, False otherwise.
+    """
     global players
     players[1] = classes.Board()
     shipsLeft = 5
@@ -168,6 +192,7 @@ def handle_gm0(key):
     # None of the tested keys were pressed
     return True
 
+
 # setup modes
 def handle_gm1_2p(key):
     """
@@ -189,14 +214,14 @@ def handle_gm1_2p(key):
 
     if shipsLeft == 0:
         clearConsole()
-        print("\rAll ships placed!\nPress any key to start the game.")
+        print("\rAll ships placed!\nPress any key to start the game. (Both players can see the board now).")
         gameMode = 2
         return True
 
     if gm1TurnPart == 0:
         clearConsole()
         print(
-            f"\rPlayer {turn+1}: ({shipsLeft} ships left)... {colors.color.BOLD}{colors.color.WARNING}(Only continue if it is your turn){colors.color.ENDC}\n"
+            f"\rPlayer {turn+1}: ({shipsLeft} ships left)... {clr.BOLD}{clr.WARNING}(Only continue if it is your turn){clr.ENDC}\n"
         )
         gm1TurnPart = 1
         return True
@@ -245,11 +270,9 @@ def handle_gm1_2p(key):
                 cursor = [0, 0]
                 return True
             else:
-                print(
-                    f"\r{colors.color.FAIL}!! Invalid ship placement. Try again.{colors.color.ENDC}\n"
-                )
+                print(f"\r{clr.FAIL}!! Invalid ship placement. Try again.{clr.ENDC}\n")
         print(
-            f"\rYou have to place the {nextShip} ship (length {colors.color.BOLD}{colors.color.WARNING}{nextShipLength}{colors.color.ENDC}).\nUse {colors.color.BOLD}{colors.color.WARNING}Arrow Keys{colors.color.ENDC} to move the cursor, {colors.color.BOLD}{colors.color.WARNING}'h' / 'v'{colors.color.ENDC} to place the ship.\nIt will place the ship at your cursor, oriented down or right\n"
+            f"\rYou have to place the {nextShip} ship (length {clr.BOLD}{clr.WARNING}{nextShipLength}{clr.ENDC}).\nUse {clr.BOLD}{clr.WARNING}Arrow Keys{clr.ENDC} to move the cursor, {clr.BOLD}{clr.WARNING}'h' / 'v'{clr.ENDC} to place the ship.\nIt will place the ship at your cursor, oriented down or right\n"
         )
         print(players[turn].stringify(cursor))
         # gm1TurnPart = 0
@@ -326,7 +349,7 @@ def handle_gm3_AI(key):
                 cursor = [0, 0]
                 return True
             else:
-                print(colors.color.FAIL+"\r!! Invalid ship placement. Try again.\n")
+                print(clr.FAIL + "\r!! Invalid ship placement. Try again.\n")
         print(
             f"\rYou have to place the {nextShip} ship (length {nextShipLength}).\nUse Arrow keys to move the cursor, h/v to place the ship.\nIt will place the ship at your cursor, oriented down or right\n"
         )
@@ -337,9 +360,16 @@ def handle_gm3_AI(key):
     # None of the tested keys were pressed
     return True
 
+
 # game modes
 def handle_gm2_2p(key):
-
+    """
+    Handles the game logic in game mode 2.
+    Args:
+        key: The key input from the player.
+    Returns:
+        bool: True if the game state is updated and the turn is switched, False otherwise.
+    """
     if gameOver():
         return False
 
@@ -362,10 +392,10 @@ def handle_gm2_2p(key):
                 set([ship for ship in board.ships if ship.isSunk(board)]) - sunkShips
             )
             print(
-                f"\r{colors.color.FAIL}Hit! {'You sunk the '+colors.color.WARNING+sunkThisTurn.pop().shipType+'!' if sunkThisTurn else ''}{colors.color.ENDC}\n"
+                f"\r{clr.FAIL}Hit! {'You sunk the '+clr.WARNING+sunkThisTurn.pop().shipType+'!' if sunkThisTurn else ''}{clr.ENDC}\n"
             )
         elif result == False:
-            print(colors.color.OKGREEN + "\rMiss!" + colors.color.ENDC)
+            print(clr.OKGREEN + "\rMiss!" + clr.ENDC)
         # Update the game state
         turn = (turn + 1) % 2
         gm2TurnPart = 0
@@ -385,9 +415,7 @@ def handle_gm2_2p(key):
             cursor[1] = (cursor[1] - 1) % 10
         elif key == keyboard.Key.right:
             cursor[1] = (cursor[1] + 1) % 10
-    print(
-        f"\rPlayer {turn+1}: {colors.color.BOLD}{colors.color.WARNING}Firing...{colors.color.ENDC}\n"
-    )
+    print(f"\rPlayer {turn+1}: {clr.BOLD}{clr.WARNING}Firing...{clr.ENDC}\n")
     print("\rUse Arrow keys to move the cursor, Enter to fire\n")
 
     gm2TurnPart = 1
@@ -396,7 +424,7 @@ def handle_gm2_2p(key):
 
 def handle_gm4_AI(key):
     """
-    Handles the game logic for the AI player in game mode 4.
+    Handles the game logic in game mode 4.
 
     Args:
         key: The key input from the user.
@@ -432,7 +460,7 @@ def handle_gm4_AI(key):
                     - sunkShips
                 )
                 print(
-                    f"\r{colors.color.FAIL}Hit! {'You sunk the '+colors.color.WARNING+sunkThisTurn.pop().shipType+'!' if sunkThisTurn else ''}{colors.color.ENDC}\n"
+                    f"\r{clr.FAIL}Hit! {'You sunk the '+clr.WARNING+sunkThisTurn.pop().shipType+'!' if sunkThisTurn else ''}{clr.ENDC}\n"
                 )
             elif result == False:
                 print("\rMiss!")
@@ -475,10 +503,10 @@ def handle_gm4_AI(key):
                 set([ship for ship in board.ships if ship.isSunk(board)]) - sunkShips
             )
             print(
-                f"\r{colors.color.FAIL}Hit! {'The AI sunk the '+colors.color.WARNING+sunkThisTurn.pop().shipType+'!' if sunkThisTurn else ''}{colors.color.ENDC}\n"
+                f"\r{clr.FAIL}Hit! {'The AI sunk the '+clr.WARNING+sunkThisTurn.pop().shipType+'!' if sunkThisTurn else ''}{clr.ENDC}\n"
             )
         elif result == False:
-            print(colors.color.OKGREEN + "\rMiss!" + colors.color.ENDC)
+            print(clr.OKGREEN + "\rMiss!" + clr.ENDC)
         print(player_board.stringify())
         turn = (turn + 1) % 2
         gm4TurnPart = 0
@@ -488,7 +516,7 @@ def handle_gm4_AI(key):
     print(players[(turn + 1) % 2].stringify(cursor, False))
 
 
-def on_press(key):
+def on_press(key: keyboard.Key):
     """
     Handles the key press event.
 
@@ -519,7 +547,7 @@ def on_press(key):
         else:
             print("\rGame mode " + str(gameMode) + " not impl yet. press q to quit")
     except AttributeError:  # Bad key pressed
-        pass # do nothing
+        pass  # do nothing
 
 
 def welcome():
@@ -539,7 +567,12 @@ def welcome():
     | |_) | (_| | |_| |_| |  __/  ____) | | | | | |_) |
     |____/ \__,_|\__|\__|_|\___| |_____/|_| |_|_| .__/
                                                 | |
-         """+colors.color.OKCYAN+colors.color.BOLD+"By Samuel, Peizhuo, and Robin"+colors.color.ENDC+"          |_|"
+         """
+        + clr.OKCYAN
+        + clr.BOLD
+        + "By Samuel, Peizhuo, and Robin"
+        + clr.ENDC
+        + "          |_|"
         + "\n" * 2
     )
 
@@ -552,6 +585,7 @@ def welcome():
 
 def main():
     welcome()
+    # Start the listener
     with keyboard.Listener(on_press=on_press, suppress=True) as listener:
         listener.join()
 
