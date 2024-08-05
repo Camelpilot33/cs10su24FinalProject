@@ -62,6 +62,11 @@ gm4TurnPart = 0
 # cursor: [row, col]
 cursor = [0, 0]
 
+#known bug: MacOS (specifically Sonoma)
+# On MacOS, if this value is too large, the AI mode will break
+# This disctates how many ships the AI should search.
+buggy_depth=100 #this seems to be a good amount. Anything larger crashes
+
 
 def gameOver(ai=False) -> bool:
     """
@@ -484,7 +489,8 @@ def handle_gm4_AI(key):
         # Update the game state
     else:  # AI
         print("\rAI's Turn! (This might take a few seconds...)\n")
-        square_freq = solver.solve_battleship(player_board)
+        global buggy_depth
+        square_freq = solver.solve_battleship(player_board,buggy_depth)
         max_freq = 0
         target = (0, 0)
         for i in range(10):
