@@ -115,7 +115,7 @@ class Board:
         return True
 
     # Print the board
-    def stringify(self: "Board", selected: tuple|None=None, drawShips: bool=True) -> str:
+    def stringify(self: "Board", selected=None, drawShips: bool=True) -> str:
         """
         Returns a string representation of the board.
 
