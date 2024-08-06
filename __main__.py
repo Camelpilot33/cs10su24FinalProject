@@ -1,7 +1,3 @@
-# HOW TO RUN THE GAME:
-# after adding requirements (see instructions)
-# run `py __main__.py` or `python3 __main__.py`
-
 from pynput import keyboard # needed for key input handling
 import os # needed for clearing the console
 import sys # needed for checking the operating system
